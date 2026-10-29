@@ -30,3 +30,7 @@ npm run test:render
 There are 57 Puck registrations (55 views plus two historical aliases). Preserve legacy sections and stored JSON; no automatic data conversion or customer-specific Next.js builds. See [split notes](docs/REPOSITORY_SPLIT.md) and [Milestone 2 report](docs/MILESTONE_2_REPORT.md). Historical reports reference monorepo paths; this README provides current commands.
 
 Imported from monorepo commit `eb7a6b56526637af99ed7f57660df7bad59bec8e`, without historical Git objects or environment files. The original workspace/history remains preserved locally.
+
+## Milestone 3 development
+
+Publication integrity is implemented on the Milestone 3 development branch and remains disabled by default until separately approved schema/rollout gates pass. See [revision design](docs/PUBLICATION_REVISIONS.md), [API contracts](docs/PUBLICATION_API.md), [migration/rollout plan](docs/MILESTONE_3_ROLLOUT.md) and [verification report](docs/MILESTONE_3_REPORT.md). Backend migration artifacts belong to vividuss-backend; documentation copies in the frontend describe the paired system. Do not mix enabled and unversioned writer instances.
