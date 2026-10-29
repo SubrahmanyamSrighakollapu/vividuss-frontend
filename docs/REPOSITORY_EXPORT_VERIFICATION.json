@@ -1,0 +1,17 @@
+{
+  "sourceMonorepoCommit": "eb7a6b56526637af99ed7f57660df7bad59bec8e",
+  "layout": "Application at repository root; local shared contracts",
+  "app": "frontend",
+  "unitTests": 17,
+  "build": "passed",
+  "additionalChecks": [
+    "lint passed with existing image warnings"
+  ],
+  "databaseWrites": false,
+  "migrationsApplied": false,
+  "environmentFilesIncluded": [
+    ".env.example"
+  ],
+  "notes": "Milestone evidence files describe earlier verification; this file records standalone export verification. Shared contracts must be synchronized across the paired repositories.",
+  "isolatedChromeTests": 3
+}

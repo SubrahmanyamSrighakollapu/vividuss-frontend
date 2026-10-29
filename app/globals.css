@@ -1,0 +1,1046 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --color-theme-primary: var(--color-primary, #111111);
+  --color-theme-secondary: var(--color-secondary, #525252);
+  --color-theme-accent: var(--color-accent, #2563eb);
+  --color-theme-background: var(--color-background, #ffffff);
+  --color-theme-surface: var(--color-surface, #f5f5f5);
+  --color-theme-text: var(--color-text, #111111);
+  --color-theme-muted: var(--color-muted-text, #737373);
+  --color-theme-border: var(--color-border, #e5e5e5);
+  --color-theme-success: var(--color-success, #16a34a);
+  --color-theme-warning: var(--color-warning, #f59e0b);
+  --color-theme-error: var(--color-error, #dc2626);
+  
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Custom Button Hover State Hooks (Phase 6D) */
+.hover-bg-override:hover {
+  background-color: var(--btn-hover-bg) !important;
+}
+.hover-text-override:hover {
+  color: var(--btn-hover-text) !important;
+}
+.hover-border-override:hover {
+  border-color: var(--btn-hover-border) !important;
+}
+
+
+
+/* =========================================================
+   WEBSITE STUDIO — PHASE 1
+   Custom Puck composition
+   ========================================================= */
+
+.studio-workspace {
+  --studio-bg: #f4f6fa;
+  --studio-panel: #ffffff;
+  --studio-border: #e4e7ee;
+  --studio-text: #161b2c;
+  --studio-muted: #7c8498;
+  --studio-accent: #6558e8;
+  --studio-radius: 10px;
+
+  display: flex;
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+
+  flex-direction: column;
+  overflow: hidden;
+
+  color: var(--studio-text);
+  background: var(--studio-bg);
+  font-size: 13px;
+}
+
+/* ---------- Studio toolbar: outside the scrolling canvas ---------- */
+
+.studio-toolbar {
+  position: relative;
+  z-index: 5;
+
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  flex: 0 0 auto;
+
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  border-bottom: 1px solid var(--studio-border);
+  background: var(--studio-panel);
+  padding: 10px 18px;
+}
+
+.studio-toolbar-heading,
+.studio-toolbar-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.studio-toolbar-mark,
+.studio-inspector-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+
+  border: 1px solid #e6e2ff;
+  border-radius: 10px;
+  background: #f3f1ff;
+  color: var(--studio-accent);
+}
+
+.studio-toolbar-mark {
+  width: 38px;
+  height: 38px;
+}
+
+.studio-eyebrow {
+  margin: 0 0 3px;
+  color: var(--studio-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.studio-toolbar h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.studio-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.studio-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.studio-status-neutral {
+  color: #667085;
+}
+
+.studio-status-warning {
+  color: #a16207;
+}
+
+.studio-status-success {
+  color: #15803d;
+}
+
+.studio-status-error {
+  color: #b91c1c;
+}
+
+.studio-save-button {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1px solid var(--studio-accent);
+  border-radius: 9px;
+  background: var(--studio-accent);
+  padding: 0 13px;
+
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.studio-save-button:hover:not(:disabled) {
+  border-color: #5145d4;
+  background: #5145d4;
+}
+
+.studio-save-button:focus-visible,
+.studio-sidebar-tab:focus-visible,
+.studio-error-banner button:focus-visible {
+  outline: 2px solid var(--studio-accent);
+  outline-offset: 3px;
+}
+
+.studio-save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ---------- Puck workspace sizing ---------- */
+
+/*
+ * The outer editor must not scroll.
+ * The canvas and panel contents own their own scrolling.
+ */
+
+.studio-editor-grid {
+  position: relative;
+  display: flex;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+
+  overflow: hidden;
+}
+
+/* Puck's root must shrink inside the available workspace. */
+.studio-editor-grid > * {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+}
+
+/* Custom editor layout using Flexbox for rock-solid collapse handling */
+.studio-composition {
+  display: flex;
+  flex-direction: row;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+
+  overflow: hidden;
+  background: var(--studio-bg);
+}
+
+/* ---------- Side panels ---------- */
+
+.studio-sidebar,
+.studio-inspector {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--studio-panel);
+}
+
+.studio-sidebar {
+  width: 250px;
+  min-width: 220px;
+  max-width: 260px;
+  flex: 0 0 250px;
+  border-right: 1px solid var(--studio-border);
+}
+
+.studio-inspector {
+  width: 320px;
+  min-width: 300px;
+  max-width: 360px;
+  flex: 0 0 320px;
+  border-left: 1px solid var(--studio-border);
+}
+
+.studio-canvas-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--studio-bg);
+}
+
+/* ---------- Sidebar Header with Close Button ---------- */
+.studio-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--studio-border);
+  padding: 8px 10px;
+  background: var(--studio-panel);
+}
+
+.studio-sidebar-header .studio-sidebar-tabs {
+  border-bottom: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.studio-panel-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--studio-border);
+  background: #ffffff;
+  color: var(--studio-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.studio-panel-close-btn:hover {
+  background: var(--studio-bg);
+  color: var(--studio-text);
+  border-color: #cbd5e1;
+}
+
+/* ---------- Toolbar Center Toggles ---------- */
+.studio-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--studio-border);
+  background: #ffffff;
+  color: var(--studio-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.studio-panel-toggle:hover {
+  background: var(--studio-bg);
+  color: var(--studio-text);
+}
+
+.studio-panel-toggle.is-active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+/* ---------- Floating Edge Toggles on Canvas ---------- */
+
+.studio-floating-toggle {
+  position: absolute;
+  top: 14px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.studio-floating-toggle:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.studio-floating-toggle-left {
+  left: 14px;
+}
+
+.studio-floating-toggle-right {
+  right: 14px;
+}
+
+/* ---------- Elements / Layers navigation ---------- */
+
+.studio-sidebar-tabs {
+  display: grid;
+  min-width: 0;
+  flex: 0 0 auto;
+
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px;
+
+  border-bottom: 1px solid var(--studio-border);
+  padding: 9px;
+  background: var(--studio-panel);
+}
+
+.studio-sidebar-tab {
+  display: flex;
+
+  min-width: 0;
+  min-height: 38px;
+
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+
+  color: #737b8d;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.studio-sidebar-tab:hover {
+  background: #f6f7fb;
+  color: var(--studio-text);
+}
+
+.studio-sidebar-tab.is-active {
+  border-color: #e5e1ff;
+  background: #f3f1ff;
+  color: var(--studio-accent);
+}
+
+/* Independent sidebar scroll regions. */
+.studio-sidebar-content,
+.studio-inspector-content {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.studio-sidebar-content {
+  padding-bottom: 20px;
+}
+
+.studio-panel-heading {
+  padding: 18px 15px 12px;
+}
+
+.studio-panel-heading h3,
+.studio-inspector-heading h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.studio-panel-heading p,
+.studio-inspector-heading p {
+  margin: 5px 0 0;
+  color: var(--studio-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+
+/* Fixed toolbar above the independently scrolling preview. */
+.studio-canvas-toolbar {
+  display: flex;
+
+  min-width: 0;
+  min-height: 43px;
+  flex: 0 0 43px;
+
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  border-bottom: 1px solid var(--studio-border);
+  background: #ffffff;
+  padding: 0 15px;
+}
+
+.studio-canvas-toolbar > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.studio-canvas-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px #dcfce7;
+}
+
+.studio-canvas-hint {
+  min-width: 0;
+  color: var(--studio-muted);
+  font-size: 10px;
+  text-align: right;
+}
+
+/*
+ * The canvas scrolls. The Studio toolbar does not.
+ * Do not add artificial height to the workspace to create a drop zone.
+ */
+
+.studio-canvas {
+  position: relative;
+  display: flex;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+
+  flex-direction: column;
+  align-items: stretch;
+
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Puck's Preview is the actual page-rendering boundary.
+ * Keep its wrapper full-width; let the document determine its height.
+ */
+
+.studio-canvas-page {
+  position: relative;
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  flex: 0 0 auto;
+
+  margin: 0;
+  border: 1px solid #e1e5ed;
+  border-radius: 5px;
+
+  background: #ffffff;
+  box-shadow: 0 5px 24px rgb(27 36 64 / 5%);
+}
+
+/* Constrain direct preview content without forcing a fake height. */
+.studio-canvas-page > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* If Puck renders an iframe, do not force a fixed viewport height. */
+.studio-canvas-page iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
+
+/* ---------- Inspector ---------- */
+
+.studio-inspector-heading {
+  display: flex;
+
+  min-width: 0;
+  min-height: 65px;
+  flex: 0 0 auto;
+
+  align-items: center;
+  gap: 10px;
+
+  border-bottom: 1px solid var(--studio-border);
+  background: #ffffff;
+  padding: 12px 15px;
+}
+
+.studio-inspector-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.studio-inspector-content {
+  padding: 13px;
+}
+
+.studio-inspector-content:empty::after {
+  display: block;
+  padding: 25px 10px;
+
+  color: var(--studio-muted);
+  content: "Select a component to edit its settings.";
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- Errors and loading ---------- */
+
+.studio-error-banner {
+  position: relative;
+  z-index: 4;
+
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+
+  border-bottom: 1px solid #fecaca;
+  background: #fef2f2;
+  padding: 10px 16px;
+
+  color: #991b1b;
+  font-size: 12px;
+}
+
+.studio-error-banner span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.studio-error-banner button {
+  flex: 0 0 auto;
+
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 6px 10px;
+
+  color: #991b1b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.studio-loading,
+.studio-load-error {
+  display: flex;
+
+  min-width: 0;
+  min-height: 300px;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  padding: 28px;
+  text-align: center;
+}
+
+.studio-loading {
+  color: #667085;
+  font-size: 13px;
+}
+
+.studio-spinner {
+  width: 24px;
+  height: 24px;
+
+  border: 2px solid #e0ddff;
+  border-top-color: var(--studio-accent);
+  border-radius: 50%;
+
+  animation: studio-spin 700ms linear infinite;
+}
+
+.studio-load-error {
+  align-items: flex-start;
+
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.studio-load-error h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.studio-load-error p {
+  margin: 0 0 8px;
+  color: #b91c1c;
+  line-height: 1.6;
+}
+
+.studio-error-icon {
+  color: #b91c1c;
+}
+
+@keyframes studio-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Smaller desktop and tablet ---------- */
+
+@media (max-width: 1100px) {
+  .studio-sidebar {
+    width: 200px;
+    flex: 0 0 200px;
+  }
+
+  .studio-inspector {
+    width: 260px;
+    flex: 0 0 260px;
+  }
+
+  .studio-canvas {
+    padding: 12px;
+  }
+
+  .studio-inspector-content {
+    padding: 10px;
+  }
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 760px) {
+  .studio-toolbar {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .studio-toolbar-heading,
+  .studio-toolbar-actions {
+    gap: 8px;
+  }
+
+  .studio-toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .studio-status {
+    white-space: normal;
+  }
+
+  .studio-composition {
+    flex-direction: column;
+  }
+
+  .studio-sidebar {
+    width: 100%;
+    max-height: 250px;
+    flex: 0 0 auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--studio-border);
+  }
+
+  .studio-inspector {
+    width: 100%;
+    max-height: 250px;
+    flex: 0 0 auto;
+    border-top: 1px solid var(--studio-border);
+    border-left: 0;
+  }
+
+  .studio-canvas {
+    padding: 8px;
+  }
+
+  .studio-canvas-hint {
+    display: none;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-save-button {
+    transition: none;
+  }
+
+  .studio-spinner {
+    animation-duration: 1.5s;
+  }
+}
+
+
+
+/* =========================================================
+   WordPress-style auto-hiding editor headers
+   ========================================================= */
+
+/* ================================================
+   Shared auto-hiding editor headers
+   ================================================ */
+
+/* Outer Portfolio template header */
+.template-editor-header {
+  position: relative;
+  z-index: 20;
+
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  min-height: 0;
+  overflow: hidden;
+
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 12px 24px;
+
+  opacity: 1;
+  transition:
+    max-height 240ms ease,
+    padding 240ms ease,
+    border-width 240ms ease,
+    opacity 180ms ease;
+  max-height: 100px;
+}
+
+/* Inner Design Workspace toolbar */
+.studio-toolbar {
+  box-sizing: border-box;
+  max-height: 100px;
+  overflow: hidden;
+
+  opacity: 1;
+  transition:
+    max-height 240ms ease,
+    min-height 240ms ease,
+    padding 240ms ease,
+    border-width 240ms ease,
+    opacity 180ms ease;
+}
+
+/* Collapse both headers so the canvas can occupy their space. */
+.template-editor-header.is-hidden {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.studio-toolbar.is-hidden {
+  max-height: 0;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-editor-header,
+  .studio-toolbar {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE WEBSITE BUILDER — SYSTEM STYLES
+   ========================================================= */
+
+/* Prevent horizontal overflow across all rendered templates */
+.studio-canvas-page,
+.puck-public-responsive-container {
+  overflow-x: clip;
+}
+
+/* Base Desktop Navbar Rules */
+.puck-nav-desktop-links {
+  display: flex !important;
+}
+.puck-nav-hamburger-btn {
+  display: none !important;
+}
+.puck-nav-desktop-cta {
+  display: inline-flex !important;
+}
+.puck-nav-search-bar {
+  display: flex !important;
+}
+
+/* Tablet: adjust gap and compact search */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .puck-nav-desktop-links {
+    gap: 12px !important;
+  }
+  .puck-nav-search-bar {
+    display: none !important;
+  }
+}
+
+/* Published Mobile Viewport (< 768px) */
+@media (max-width: 767px) {
+  .puck-nav-desktop-links {
+    display: none !important;
+  }
+  .puck-nav-hamburger-btn {
+    display: inline-flex !important;
+  }
+  .puck-nav-desktop-cta {
+    display: none !important;
+  }
+  .puck-nav-search-bar {
+    display: none !important;
+  }
+}
+
+/* Visual Editor Preview Canvas with Mobile selected */
+.studio-preview-mobile .puck-nav-desktop-links {
+  display: none !important;
+}
+.studio-preview-mobile .puck-nav-hamburger-btn {
+  display: inline-flex !important;
+}
+.studio-preview-mobile .puck-nav-desktop-cta {
+  display: none !important;
+}
+.studio-preview-mobile .puck-nav-search-bar {
+  display: none !important;
+}
+
+/* Visual Editor Preview Canvas with Tablet selected */
+.studio-preview-tablet .puck-nav-desktop-links {
+  gap: 12px !important;
+}
+.studio-preview-tablet .puck-nav-search-bar {
+  display: none !important;
+}
+
+/* Container query equivalents (for editor or responsive containers) */
+@container studio-preview (max-width: 767px) {
+  .puck-nav-desktop-links {
+    display: none !important;
+  }
+  .puck-nav-hamburger-btn {
+    display: inline-flex !important;
+  }
+  .puck-nav-desktop-cta {
+    display: none !important;
+  }
+  .puck-nav-search-bar {
+    display: none !important;
+  }
+}
+
+@container studio-preview (min-width: 768px) and (max-width: 1023px) {
+  .puck-nav-desktop-links {
+    gap: 12px !important;
+  }
+  .puck-nav-search-bar {
+    display: none !important;
+  }
+}
+
+/* Common responsive helper utilities */
+.puck-responsive-grid-cols {
+  grid-template-columns: repeat(var(--puck-columns, 3), minmax(0, 1fr));
+}
+.puck-responsive-flex-dir {
+  flex-direction: var(--puck-flex-direction, row);
+}
+.puck-responsive-align {
+  align-items: var(--puck-align-items, center);
+}
+.puck-responsive-justify {
+  justify-content: var(--puck-justify-content, flex-start);
+}
+.puck-responsive-gap {
+  gap: var(--puck-gap, 16px);
+}
+
+@keyframes puckFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes puckSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+

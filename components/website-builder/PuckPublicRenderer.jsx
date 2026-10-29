@@ -1,0 +1,102 @@
+
+"use client";
+
+import React, { Component } from "react";
+import { Render } from "@puckeditor/core";
+import publicConfig from "./public-config";
+import { inspectDocument } from "../../shared/website-contract/index.cjs";
+import { StudioProvider } from "./context/StudioContext.jsx";
+
+class PuckErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error(
+      "PuckPublicRenderer rendering error:",
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center text-red-600 bg-red-50 border border-red-200 rounded-xl my-4">
+          <p className="font-semibold">
+            Unable to render component block
+          </p>
+          <p className="text-xs text-red-500 mt-1">
+            {this.state.error?.message || "Render error"}
+          </p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function PuckPublicRenderer({
+  data,
+  pages = [],
+  activePageId = "",
+  templateId = "",
+  websiteId = "",
+  websiteSlug = "",
+  templateName = "",
+}) {
+  let parsedData = data;
+
+  if (typeof data === "string") {
+    try {
+      parsedData = JSON.parse(data);
+    } catch {
+      return <p role="alert">Unsupported website document.</p>;
+    }
+  }
+
+  if (
+    !parsedData ||
+    !Array.isArray(parsedData.content) ||
+    !parsedData.root ||
+    typeof parsedData.root !== "object"
+  ) {
+    return <p role="alert">Unsupported website document.</p>;
+  }
+  if (inspectDocument(parsedData).errors.length) return <p role="alert">Unsupported website document.</p>;
+
+  return (
+    <PuckErrorBoundary>
+      <StudioProvider
+        pages={pages}
+        activePageId={activePageId}
+        templateId={templateId}
+        websiteId={websiteId}
+        websiteSlug={websiteSlug}
+        templateName={templateName}
+      >
+        <div
+          className="puck-public-responsive-container"
+          style={{
+            width: "100%",
+            minWidth: 0,
+            containerType: "inline-size",
+            containerName: "studio-preview",
+          }}
+        >
+          <Render
+            config={publicConfig}
+            data={parsedData}
+          />
+        </div>
+      </StudioProvider>
+    </PuckErrorBoundary>
+  );
+}
