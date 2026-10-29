@@ -1,3 +1,4 @@
+import { downloadLocalDraft } from "../../lib/publication-client.mjs";
 // Isolated shared-view browser harness. This never bypasses app authentication:
 // it does not navigate to a Vividuss route or access a backend/database.
 import { test, expect } from "@playwright/test";
@@ -31,4 +32,14 @@ test("isolated nested shared views have equal preview/public pixels and responsi
   expect(published.equals(preview),'Shared preview/public fixture pixels differ').toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await info.attach('shared-render.png',{body:published,contentType:'image/png'});
+});
+
+test("local draft recovery downloads exact unsaved JSON without server writes", async ({page}) => {
+  await page.setContent("<html><body>Local recovery fixture</body></html>");
+  const draft={documentId:"unsaved",root:{props:{}},content:[{type:"Heading",props:{id:"h",text:"Unsaved caf? ??"}}],unknown:{keep:true}};
+  const downloading=page.waitForEvent("download");
+  await page.evaluate(downloadLocalDraft,draft);
+  const download=await downloading;
+  expect(download.suggestedFilename()).toBe("vividuss-local-draft.json");
+  expect(JSON.parse(fs.readFileSync(await download.path(),"utf8"))).toEqual(draft);
 });

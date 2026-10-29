@@ -1,7 +1,9 @@
+import { publishedWebsiteIdentity } from "@/lib/publication-client.mjs";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function WebsiteCard({ website }) {
+  const publishedSlug = publishedWebsiteIdentity(website).slug;
   const lastSavedDate = new Date(website.updatedAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -47,17 +49,17 @@ export default function WebsiteCard({ website }) {
           )}
         </div>
 
-        {website.isPublished && website.slug ? (
+        {website.isPublished && publishedSlug ? (
           <div className="mb-3 flex items-center gap-1 text-xs text-gray-500">
             <span className="text-gray-400">URL:</span>
             <a
-              href={`/${website.slug}`}
+              href={`/${publishedSlug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="truncate font-medium text-indigo-600 hover:underline"
-              title={`Visit /${website.slug}`}
+              title={`Visit /${publishedSlug}`}
             >
-              /{website.slug}
+              /{publishedSlug}
             </a>
           </div>
         ) : website.template?.name ? (
@@ -83,9 +85,9 @@ export default function WebsiteCard({ website }) {
             Edit Site
           </Link>
 
-          {website.isPublished && website.slug ? (
+          {website.isPublished && publishedSlug ? (
             <a
-              href={`/${website.slug}`}
+              href={`/${publishedSlug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 hover:text-gray-950"

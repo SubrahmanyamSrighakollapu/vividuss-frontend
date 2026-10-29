@@ -99,3 +99,14 @@ test('responsive style implementation retains desktop/tablet/mobile inheritance 
   assert.equal(resolveResponsiveValue({desktop:{fontSize:42},tablet:{fontSize:32}},'fontSize','mobile',16),32);
   const sparse={root:{props:{}},content:[]};assert.equal(detectDocumentFormat({editorData:sparse}),'unversioned-puck');
 });
+
+test("website-owned chrome is explicit revision data; unknown historical globalLayout stays inert",()=>{
+  const Page=load(path.join(base,"PublishedPage.jsx")).default;
+  const page={id:"legacy",slug:"home",sections:[]};
+  const snapshot={name:"Site",slug:"site",pages:[page],globalLayout:{header:{enabled:true,logoText:"Frozen brand",links:[{label:"About",href:"/about"}]}}};
+  const render=s=>renderToStaticMarkup(React.createElement(Page,{website:{id:"w"},snapshot:s,page,pages:s.pages,slug:"site"}));
+  assert.doesNotMatch(render(snapshot),/Frozen brand/);
+  assert.match(render({...snapshot,publication:{revisionId:"r"},layoutPolicy:"website-owned-v1"}),/Frozen brand/);
+  assert.match(render({...snapshot,publication:{revisionId:"r"},layoutPolicy:"website-owned-v1"}),/href="\/site\/about"/);
+  assert.doesNotMatch(render({...snapshot,publication:{revisionId:"r"},layoutPolicy:"legacy-output"}),/Frozen brand/);
+});

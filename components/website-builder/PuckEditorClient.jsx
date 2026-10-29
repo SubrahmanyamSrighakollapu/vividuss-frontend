@@ -12,6 +12,7 @@ import { withLayoutDefaults } from "./globalLayout.mjs";
 import { createSaveQueue, flushLatest } from "./saveQueue.mjs";
 import { Puck, useGetPuck } from "@puckeditor/core";
 import puckConfig, { DEFAULT_PAGE_RESPONSIVE } from "./puck-config";
+import { createConcurrencySession, publicationError, downloadLocalDraft } from "@/lib/publication-client.mjs";
 import { StudioProvider } from "./context/StudioContext.jsx";
 import { retainDocumentEnvelope, inspectDocument, createPageDocument } from "../../shared/website-contract/index.cjs";
 
@@ -160,8 +161,13 @@ export default function PuckEditorClient({
   onHeaderVisibilityChange = () => {},
   onRegisterEditor,
   interactionLocked = false,
+  concurrency,
+  onConcurrencyAcknowledged,
 }) {
   const [data, setData] = useState(null);
+  const versionSessionRef = useRef(createConcurrencySession(concurrency));
+  const [conflict, setConflict] = useState(false);
+  useEffect(() => { versionSessionRef.current.acknowledge({concurrency}); }, [concurrency]);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
   const [savedAt, setSavedAt] = useState(null);
@@ -406,6 +412,7 @@ useEffect(() => {
         if (result.data?.editorData == null && result.data?.sections?.length) {
           throw new Error("Legacy sections must be migrated and verified before Puck editing. Existing content is preserved.");
         }
+        versionSessionRef.current.assertLoaded(result.data?.concurrency);
         const rawDocument = result.data?.editorData ?? createPageDocument(pageId, createEmptyDocument().root.props);
         if (inspectDocument(rawDocument).errors.length) throw new Error("Unsupported or invalid website document. Saved content is preserved.");
 
@@ -527,13 +534,14 @@ useEffect(() => {
         : API_URL + "/templates/admin/" + encodeURIComponent(templateId) + "/pages/" + encodeURIComponent(pageId) + "/editor-data";
       const response = await fetch(endpoint, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...versionSessionRef.current.headers() },
         body: JSON.stringify({ editorData: document, responsive: document.root?.props?.responsive || DEFAULT_PAGE_RESPONSIVE }),
       });
       const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.success) throw new Error(result?.errors?.length
-        ? result.errors.slice(0, 3).map(item => `${item.path}: ${item.reason}`).join("; ")
-        : result?.message || "Unable to save page document.");
+      if (!response.ok || !result?.success) throw publicationError(result, response.status);
+      versionSessionRef.current.acknowledge(result);
+      onConcurrencyAcknowledged?.(result);
+      setConflict(false);
       lastSavedSerializedRef.current = serializedAttempt;
       dirtyRef.current = latestEditorSerializedRef.current !== serializedAttempt;
       if (mountedRef.current) {
@@ -542,15 +550,16 @@ useEffect(() => {
         setRetryDocument(null);
       }
     } catch (err) {
+      if (err.kind === "conflict") setConflict(true);
       dirtyRef.current = true;
       if (mountedRef.current) {
-        setError(err.message || "Unable to save page.");
+        setError((err.kind === "validation" ? "Validation failed: " : err.kind === "conflict" ? "Version conflict: " : "Save failed: ") + (err.message || "Unable to save page."));
         setRetryDocument(latestEditorDataRef.current || document);
         setSaveStatus("error");
       }
       throw err;
     } finally { saveLockRef.current = false; }
-  }, [templateId, websiteId, pageId, getToken]);
+  }, [templateId, websiteId, pageId, getToken, onConcurrencyAcknowledged]);
 
   const saveQueueRef = useRef(null);
   useEffect(() => {
@@ -787,6 +796,7 @@ const saveGlobalLayout = useCallback(() => {
 
 
       <div className="studio-toolbar-actions">
+        {concurrency?.enabled && !conflict && <button type="button" className="studio-save-button" onClick={() => downloadLocalDraft(getCurrentPuckDataRef.current?.() || latestEditorDataRef.current)}>Download local JSON</button>}
         <StatusIndicator status={saveStatus} savedAt={savedAt} />
 
         {saveStatus === "error" && retryDocument ? (
@@ -812,6 +822,11 @@ const saveGlobalLayout = useCallback(() => {
       </div>
     </div>
 
+    {conflict && <div role="alert" className="studio-error-banner">
+      Your local draft is preserved. Download it before reloading the latest server state.
+      <button type="button" onClick={() => downloadLocalDraft(getCurrentPuckDataRef.current?.() || latestEditorDataRef.current)}>Download local JSON</button>
+      <button type="button" onClick={() => { if (window.confirm("Have you downloaded your local JSON? Reloading discards unsaved edits.")) window.location.reload(); }}>Reload after downloading</button>
+    </div>}
     {error && data && (
       <div className="studio-error-banner" role="alert">
         <Icon name="alert" size={17} />

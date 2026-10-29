@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createTransitionGate } from "@/components/website-builder/saveQueue.mjs";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import PublicationPanel from "./PublicationPanel";
+import { createConcurrencySession, publicationError, publishedWebsiteIdentity } from "@/lib/publication-client.mjs";
 import PuckEditorClient from "@/components/website-builder/PuckEditorClient";
 
 const API_URL = (
@@ -113,6 +115,9 @@ export default function Builder({ website: initialWebsite }) {
   const router = useRouter();
   const { getToken } = useAuth();
   const [website, setWebsite] = useState(initialWebsite);
+  const [versionSession] = useState(() => createConcurrencySession(initialWebsite.concurrency));
+  const [concurrency, setConcurrency] = useState(initialWebsite.concurrency);
+  const acknowledgeConcurrency = useCallback(result => { setConcurrency(versionSession.acknowledge(result)); }, [versionSession]);
   const [headersHidden, setHeadersHidden] = useState(false);
   const [pageActionLoading, setPageActionLoading] = useState(false);
   const [pageActionError, setPageActionError] = useState("");
@@ -256,21 +261,20 @@ export default function Builder({ website: initialWebsite }) {
 
       const response = await fetch(apiUrl(API_URL, `${endpoint}`), {
         method,
-        headers,
+        headers: { ...headers, ...versionSession.headers() },
         body: body ? JSON.stringify(body) : undefined,
       });
 
       const result = await response.json().catch(() => null);
 
       if (!response.ok || !result?.success) {
-        throw new Error(
-          result?.message || `Page action failed (HTTP ${response.status}).`
-        );
+        throw publicationError(result, response.status);
       }
 
+      acknowledgeConcurrency(result);
       return result;
     },
-    [getToken]
+    [getToken, acknowledgeConcurrency, versionSession]
   );
 
   const createPage = useCallback(async () => {
@@ -389,6 +393,7 @@ export default function Builder({ website: initialWebsite }) {
 
   // Publish saved JSON only after the editor flush has been acknowledged.
   const handlePublish = useCallback(async () => {
+    if (versionSession.current()?.enabled && !window.confirm("Publish all saved pages as a new immutable revision?")) return;
     if (publishLoading || !websiteId || gateRef.current.busy) return;
 
 
@@ -417,24 +422,24 @@ export default function Builder({ website: initialWebsite }) {
 
       const response = await fetch(apiUrl(API_URL, `/websites/${encodeURIComponent(websiteId)}/publish`), {
         method: "POST",
-        headers,
+        headers: { ...headers, ...versionSession.headers(true) },
         body: JSON.stringify({}),
       });
 
       const result = await response.json().catch(() => null);
 
       if (!response.ok || !result?.success) {
-        throw new Error(
-          result?.message || `Failed to publish website (HTTP ${response.status}).`
-        );
+        throw publicationError(result, response.status);
       }
 
+      acknowledgeConcurrency(result);
       // Update local state with latest slug & published status
       setWebsite((prev) => ({
         ...prev,
         slug: result.slug,
         isPublished: true,
         publishedAt: result.publishedAt,
+        publication: { slug: result.slug, activeRevisionId: result.revision?.id || null },
       }));
       setCustomSlugInput(result.slug);
 
@@ -449,7 +454,7 @@ export default function Builder({ website: initialWebsite }) {
     } finally {
       setPublishLoading(false);
     }
-  }, [publishLoading, websiteId, getToken, refreshWebsite, flushEditor]);
+  }, [publishLoading, websiteId, getToken, refreshWebsite, flushEditor, acknowledgeConcurrency, versionSession]);
 
   // Scalable slug update handler
   const handleUpdateSlug = useCallback(
@@ -488,20 +493,21 @@ export default function Builder({ website: initialWebsite }) {
 
         const response = await fetch(apiUrl(API_URL, `/websites/${encodeURIComponent(websiteId)}`), {
           method: "PATCH",
-          headers,
+          headers: { ...headers, ...versionSession.headers() },
           body: JSON.stringify({ slug: cleanInput }),
         });
 
         const result = await response.json().catch(() => null);
 
         if (!response.ok || !result?.success) {
-          throw new Error(result?.message || "Failed to update slug");
+          throw publicationError(result, response.status);
         }
 
+        acknowledgeConcurrency(result);
         const updatedSlug = result.data?.slug || cleanInput;
         setWebsite((prev) => ({ ...prev, slug: updatedSlug }));
         setCustomSlugInput(updatedSlug);
-        setSlugSuccess(`URL slug updated successfully to "/${updatedSlug}"!`);
+        setSlugSuccess(versionSession.current()?.enabled ? `Draft URL updated to "/${updatedSlug}". Publish to change the live URL.` : `URL slug updated successfully to "/${updatedSlug}"!`);
         await refreshWebsite();
       } catch (err) {
         setSlugError(
@@ -511,7 +517,7 @@ export default function Builder({ website: initialWebsite }) {
         setSlugUpdating(false);
       }
     },
-    [slugUpdating, websiteId, customSlugInput, getToken, refreshWebsite]
+    [slugUpdating, websiteId, customSlugInput, getToken, refreshWebsite, acknowledgeConcurrency, versionSession]
   );
 
   // Copy link helper
@@ -549,12 +555,15 @@ export default function Builder({ website: initialWebsite }) {
 
   // Public live domain calculation
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const mainPublicUrl = website?.slug ? `${origin}/${website.slug}` : "";
+  const published = publishedWebsiteIdentity(website);
+  const publishedSlug = published.slug;
+  const livePage = published.pages.find(page => page.id === activePageId);
+  const mainPublicUrl = publishedSlug ? `${origin}/${publishedSlug}` : "";
   const currentPreviewUrl =
-    website?.slug
-      ? activePage?.slug && activePage.slug !== "home"
-        ? `/${website.slug}/${activePage.slug}`
-        : `/${website.slug}`
+    publishedSlug && livePage
+      ? livePage.slug && livePage.slug !== "home"
+        ? `/${publishedSlug}/${livePage.slug}`
+        : `/${publishedSlug}`
       : "#";
 
   return (
@@ -779,8 +788,11 @@ export default function Builder({ website: initialWebsite }) {
             </p>
           </div>
         ) : (
-          <div className="h-full min-h-0 min-w-0 overflow-hidden">
-            <PuckEditorClient
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+            {concurrency?.enabled && <PublicationPanel websiteId={websiteId} getToken={getToken} session={versionSession} publicationVersion={concurrency.publicationVersion} onAcknowledged={acknowledgeConcurrency} beforeWrite={flushEditor} />}
+            <div className="min-h-0 flex-1"><PuckEditorClient
+              concurrency={concurrency}
+              onConcurrencyAcknowledged={acknowledgeConcurrency}
               key={`puck-web-${website.id}-${activePageId}`}
               websiteId={website.id}
               websiteSlug={website.slug}
@@ -792,7 +804,7 @@ export default function Builder({ website: initialWebsite }) {
               onHeaderVisibilityChange={setHeadersHidden}
               onRegisterEditor={registerEditor}
               interactionLocked={pageActionLoading || publishLoading}
-            />
+            /></div>
           </div>
         )}
       </section>
@@ -829,7 +841,7 @@ export default function Builder({ website: initialWebsite }) {
                 🎉 Your Website is Live!
               </h2>
               <p className="mt-1 text-sm text-emerald-100">
-                Your changes have been compiled and published under your unique production slug.
+                Your saved pages have been published under your website URL.
               </p>
             </div>
 
@@ -842,7 +854,7 @@ export default function Builder({ website: initialWebsite }) {
                     Live Website URL
                   </span>
                   <span className="font-mono text-[11px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                    Slug ID: {website.slug}
+                    Slug ID: {publishedSlug}
                   </span>
                 </div>
 
@@ -935,17 +947,17 @@ export default function Builder({ website: initialWebsite }) {
               </div>
 
               {/* Page breakdown links */}
-              {sortedPages.length > 1 && (
+              {published.pages.length > 1 && (
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                    Published Pages ({sortedPages.length})
+                    Published Pages ({published.pages.length})
                   </h3>
                   <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl border border-gray-200 bg-white p-2">
-                    {sortedPages.map((page) => {
+                    {published.pages.map((page) => {
                       const isHome = page.slug === "home" || page.order === 0;
                       const pagePath = isHome
-                        ? `/${website.slug}`
-                        : `/${website.slug}/${page.slug || page.id}`;
+                        ? `/${publishedSlug}`
+                        : `/${publishedSlug}/${page.slug || page.id}`;
                       const pageFullUrl = `${origin}${pagePath}`;
                       const isCopied = copiedPageKey === page.id;
 
